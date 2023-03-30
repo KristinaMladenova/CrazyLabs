@@ -3,14 +3,19 @@ import {
   PerspectiveCamera,
   Scene,
   MeshPhongMaterial,
+  MeshBasicMaterial,
   Mesh,
   DirectionalLight,
   AmbientLight,
   PlaneGeometry,
-  Fog,
   FogExp2,
-  Object3D,
+  CylinderGeometry,
+  PCFSoftShadowMap,
   BoxGeometry,
+  OrthographicCamera,
+  VSMShadowMap,
+  BasicShadowMap,
+  PCFShadowMap,
 } from "three";
 
 const width = window.innerWidth;
@@ -34,11 +39,8 @@ function onWindowResize() {
 window.addEventListener("resize", onWindowResize);
 
 renderer.setSize(width, height);
-
-const geometry = new PlaneGeometry(1.5, 500);
-const material = new MeshPhongMaterial({ color: 0x616497 });
-const plane = new Mesh(geometry, material);
-plane.position.z = -2.5;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = BasicShadowMap;
 
 const scene = new Scene();
 {
@@ -47,33 +49,57 @@ const scene = new Scene();
   scene.fog = new FogExp2(color, density);
 }
 
-const playerSize = new PlaneGeometry(0.1, 0.1);
-const playerMaterial = new MeshPhongMaterial({ color: 0x616497 });
-const player = new Mesh(playerSize, playerMaterial);
-player.position.z = -1;
-player.position.y = -0.4;
+const ambient = new AmbientLight(0xffffff, 0.5);
 
-scene.add(player);
+const light = new DirectionalLight(0xffffff, 1);
+light.position.set(0.3, 0.5, 1);
+
+const frustumSize = 80;
+
+light.castShadow = true;
+light.shadow.mapSize.width = innerWidth;
+light.shadow.mapSize.height = innerHeight;
+
+light.shadow.camera = new OrthographicCamera(
+  -frustumSize / 2,
+  frustumSize / 2,
+  frustumSize / 2,
+  -frustumSize / 2,
+  1,
+  frustumSize
+);
+
+// Same position as LIGHT position.
+light.shadow.camera.position.copy(light.position);
+light.shadow.camera.lookAt(scene.position);
+scene.add(light.shadow.camera);
+
+const geometry = new PlaneGeometry(1.5, 500);
+const material = new MeshPhongMaterial({ color: 0x616497 });
+const plane = new Mesh(geometry, material);
+plane.receiveShadow = true;
+plane.position.y = -0.1;
+plane.rotation.x = 3.5;
+plane.position.z = -2.5;
+
+const playerSize = new CylinderGeometry(0.08, 0.08, 0.06, 3);
+const playerMaterial = new MeshPhongMaterial({ color: 0x4d3d64 });
+const player = new Mesh(playerSize, playerMaterial);
+player.position.z = -0.3;
+player.position.y = -0.1;
+player.rotation.x = 3.5;
+player.castShadow = true; //default is false
+player.receiveShadow = true; //default
+
 scene.add(plane);
+scene.add(player);
+scene.add(ambient);
+scene.add(light);
 
 const planePosition = () => {
   plane.rotation.y = 0;
   plane.rotation.x = 5;
 };
-
-const ambient = new AmbientLight(0xffffff, 0.5);
-scene.add(ambient);
-
-const light = new DirectionalLight(0xffffff, 1);
-
-light.position.set(0, 40, -10);
-light.castShadow = true;
-scene.add(light);
-
-light.shadow.mapSize.width = 512; // default
-light.shadow.mapSize.height = 512; // default
-light.shadow.camera.near = 0.5; // default
-light.shadow.camera.far = 500; // default
 
 const render = () => {
   planePosition();
