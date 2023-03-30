@@ -40,7 +40,7 @@ window.addEventListener("resize", onWindowResize);
 
 renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = BasicShadowMap;
+renderer.shadowMap.type = PCFShadowMap;
 
 const scene = new Scene();
 {
@@ -49,10 +49,27 @@ const scene = new Scene();
   scene.fog = new FogExp2(color, density);
 }
 
+const geometry = new PlaneGeometry(1.5, 500);
+const material = new MeshPhongMaterial({ color: 0x616497 });
+const plane = new Mesh(geometry, material);
+plane.receiveShadow = true;
+plane.position.y = 0;
+plane.rotation.x = 0;
+plane.position.z = -2.5;
+
+const playerSize = new CylinderGeometry(0.05, 0.05, 0.06, 3);
+const playerMaterial = new MeshPhongMaterial({ color: 0x4d3d64 });
+const player = new Mesh(playerSize, playerMaterial);
+player.position.z = -0.3;
+player.position.y = -0.1;
+player.rotation.x = 3.5;
+player.castShadow = true; //default is false
+player.receiveShadow = true; //default
+
 const ambient = new AmbientLight(0xffffff, 0.5);
 
 const light = new DirectionalLight(0xffffff, 1);
-light.position.set(0.3, 0.5, 1);
+light.position.set(1.4, 3.6, 8);
 
 const frustumSize = 80;
 
@@ -71,25 +88,8 @@ light.shadow.camera = new OrthographicCamera(
 
 // Same position as LIGHT position.
 light.shadow.camera.position.copy(light.position);
-light.shadow.camera.lookAt(scene.position);
+light.shadow.camera.lookAt(player.position);
 scene.add(light.shadow.camera);
-
-const geometry = new PlaneGeometry(1.5, 500);
-const material = new MeshPhongMaterial({ color: 0x616497 });
-const plane = new Mesh(geometry, material);
-plane.receiveShadow = true;
-plane.position.y = -0.1;
-plane.rotation.x = 3.5;
-plane.position.z = -2.5;
-
-const playerSize = new CylinderGeometry(0.08, 0.08, 0.06, 3);
-const playerMaterial = new MeshPhongMaterial({ color: 0x4d3d64 });
-const player = new Mesh(playerSize, playerMaterial);
-player.position.z = -0.3;
-player.position.y = -0.1;
-player.rotation.x = 3.5;
-player.castShadow = true; //default is false
-player.receiveShadow = true; //default
 
 scene.add(plane);
 scene.add(player);
