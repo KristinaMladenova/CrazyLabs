@@ -1,6 +1,5 @@
 import * as THREE from "three";
-import TWEEN, { update } from "@tweenjs/tween.js";
-import { Box3, Vector3 } from "three";
+import TWEEN from "@tweenjs/tween.js";
 
 export default class RunningScene extends THREE.Scene {
   private geometry = new THREE.PlaneGeometry(2, 100);
@@ -116,8 +115,6 @@ export default class RunningScene extends THREE.Scene {
       // this.updateSpheres();
 
       TWEEN.update();
-
-      this.detectCollisionWithCoins();
     }
   }
 
