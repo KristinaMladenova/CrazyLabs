@@ -1,4 +1,9 @@
-import { WebGLRenderer, PerspectiveCamera, PCFShadowMap } from "three";
+import {
+  WebGLRenderer,
+  PerspectiveCamera,
+  PCFShadowMap,
+  PCFSoftShadowMap,
+} from "three";
 import RunningScene from "./scenes/running-scene";
 
 const width = window.innerWidth;
@@ -11,9 +16,16 @@ const renderer = new WebGLRenderer({
   precision: "mediump",
 });
 
-const mainCamera = new PerspectiveCamera(60, width / height, 0.1, 1000);
+const mainCamera = new PerspectiveCamera(100, width / height, 0.1, 100);
+mainCamera.rotateX(-150);
+mainCamera.position.z = 0;
+mainCamera.position.y = 1;
+
 function onWindowResize() {
   mainCamera.aspect = window.innerWidth / window.innerHeight;
+
+  mainCamera.position.z = 5;
+  mainCamera.position.y = 1;
   mainCamera.updateProjectionMatrix();
 
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -23,7 +35,7 @@ window.addEventListener("resize", onWindowResize);
 
 renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = PCFShadowMap;
+renderer.shadowMap.type = PCFSoftShadowMap;
 
 const runningScene = new RunningScene();
 
