@@ -28,6 +28,13 @@ body {
   place-items: center;
   width: 100%;
   height: 100%;
+  background-image: linear-gradient(
+    #b4d3ef,
+    #b4d3ef,
+    #606497,
+    #606497,
+    #4d3d64
+  );
 }
 
 h1 {
@@ -45,8 +52,7 @@ h1 {
 
   background: url("https://static.vecteezy.com/system/resources/previews/009/877/699/non_2x/pixel-art-night-sky-background-with-clouds-and-stars-for-game-8-bit-vector.jpg")
     repeat-x top center;
-  background-size: auto 25vh;
-  background-color: #b4d3ef;
+  background-size: auto 10vh;
 }
 button {
   border-radius: 10px;
