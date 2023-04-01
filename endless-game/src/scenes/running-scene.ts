@@ -1,31 +1,111 @@
 import * as THREE from "three";
+import TWEEN, { Tween } from "@tweenjs/tween.js";
 
-class RunningScene extends THREE.Scene {
+export default class RunningScene extends THREE.Scene {
   private geometry = new THREE.PlaneGeometry(1.5, 500);
   private material = new THREE.MeshPhongMaterial({ color: 0x616497 });
-  private plane = new THREE.Mesh(this.geometry, this.material);
-  
-  public fog;
+
   public fogColor = 0xb4d3ef;
   public density = 0.2;
 
-  constructor() {
-    super();
+  startTime = 0;
+  GAME_DURATION = 10;
 
+  private plane = new THREE.Mesh(this.geometry, this.material);
+
+  planePosition() {
+    this.plane.rotation.y = 0;
+    this.plane.rotation.x = 5;
+  }
+
+  private spheres: THREE.Mesh[] = [];
+  private sphereCount = Math.floor(Math.random() * 10) + 1;
+
+  private clock = new THREE.Clock();
+
+  private playerSize = new THREE.CylinderGeometry(0.05, 0.05, 0.06, 3);
+  private playerMaterial = new THREE.MeshPhongMaterial({ color: 0x4d3d64 });
+  private player = new THREE.Mesh(this.playerSize, this.playerMaterial);
+
+  private moveLeft() {
+    if (this.player.position.x !== -18) {
+      const tweenLeft = new TWEEN.Tween(this.player.position)
+        .to({ x: this.player.position.x - 18 }, 200)
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .onUpdate(() => {
+          this.player.rotation.y = -140 * (Math.PI / 180);
+          if (this.player.position.x < -18) {
+            this.player.position.x = -18;
+          }
+        })
+        .onComplete(() => {
+          this.player.rotation.y = 180 * (Math.PI / 180);
+        });
+      tweenLeft.start();
+    }
+  }
+  private moveRight() {
+    if (this.player.position.x !== 18) {
+      const tweenRight = new Tween(this.player.position)
+        .to({ x: this.player.position.x + 18 }, 200)
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .onUpdate(() => {
+          this.player.rotation.y = 140 * (Math.PI / 180);
+
+          if (this.player.position.x >= 18) {
+            this.player.position.x = 18;
+          }
+        })
+        .onComplete(() => {
+          this.player.rotation.y = 180 * (Math.PI / 180);
+        });
+      tweenRight.start();
+    }
+  }
+
+  private generateSpheres() {}
+
+  private updateSpheres(deltaTime: number) {
+    for (let i = 0; i < this.spheres.length; i++) {
+      const sphere = this.spheres[i];
+      const speed = 1; // Change this to adjust the speed of the spheres
+      sphere.position.z += speed * deltaTime;
+
+      // Check for collision with the player
+      const distance = this.player.position.distanceTo(sphere.position);
+      if (distance < 1) {
+        // Particle effect
+        const particle = this.createParticleEffect(sphere.position);
+        this.add(particle);
+
+        // Remove the sphere from the scene and array
+        this.remove(sphere);
+        this.spheres.splice(i, 1);
+
+        // Add to the score
+        this.score++;
+        this.updateScoreUI();
+
+        // Display the button if the player reaches a certain score
+        if (this.score >= 10) {
+          this.displayButton();
+        }
+      }
+    }
+  }
+
+  async load() {
     this.fog = new THREE.FogExp2(this.fogColor, this.density);
     this.plane.receiveShadow = true;
     this.plane.position.y = 0;
     this.plane.rotation.x = 0;
     this.plane.position.z = -2.5;
 
-    const playerSize = new THREE.CylinderGeometry(0.05, 0.05, 0.06, 3);
-    const playerMaterial = new THREE.MeshPhongMaterial({ color: 0x4d3d64 });
-    const player = new THREE.Mesh(playerSize, playerMaterial);
-    player.position.z = -0.3;
-    player.position.y = -0.1;
-    player.rotation.x = 3.5;
-    player.castShadow = true; //default is false
-    player.receiveShadow = true; //default
+    this.player.position.z = -0.3;
+    this.player.position.y = -0.1;
+    this.player.rotation.x = 3.5;
+    this.player.castShadow = true; //default is false
+    this.player.receiveShadow = true; //default
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -48,21 +128,60 @@ class RunningScene extends THREE.Scene {
 
     // Same position as LIGHT position.
     light.shadow.camera.position.copy(light.position);
-    light.shadow.camera.lookAt(player.position);
+    light.shadow.camera.lookAt(this.player.position);
     this.add(light.shadow.camera);
 
     this.add(this.plane);
-    this.add(player);
+    this.add(this.player);
     this.add(ambient);
     this.add(light);
   }
 
-  planePosition() {
-    this.plane.rotation.y = 0;
-    this.plane.rotation.x = 5;
-  };
+  initialize() {
+    // ...
+    const canvas = document.querySelector("canvas");
+    canvas.addEventListener("mousemove", this.onMouseMove.bind(this));
 
-  // kako planePosition isto taka nadole dodavaj metodi
+    this.generateSpheres();
+  }
+  private onMouseMove(event: MouseEvent) {
+    const canvas = document.querySelector("canvas");
+    const canvasBounds = canvas.getBoundingClientRect();
+    const canvasCenterX = canvasBounds.left + canvasBounds.width / 1;
+    const mousePositionX = event.clientX;
+
+    const distanceFromCenter = mousePositionX - canvasCenterX;
+    const playerVelocity = (distanceFromCenter / canvasBounds.width) * 1;
+
+    this.player.position.x += playerVelocity;
+
+    for (let i = 0; i < this.sphereCount; i++) {
+      const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+
+      const sphere = new THREE.Mesh(sphereGeometry, this.material);
+      sphere.receiveShadow = true;
+      sphere.position.x = Math.random() * 10 - 5;
+      sphere.position.y = -0.1;
+      sphere.position.z = -Math.random() * 10;
+      this.add(sphere);
+      this.spheres.push(sphere);
+    }
+  }
+
+  update() {
+    const elapsedTime = this.clock.getElapsedTime();
+    if (this.startTime !== null && elapsedTime >= this.GAME_DURATION) {
+      // End the game
+      console.log("Game over!");
+      this.startTime = null;
+      const div = document.getElementById("game-over-modal");
+      div.style.display = "flex";
+
+      this.updateSpheres();
+
+      TWEEN.update();
+    }
+  }
+
+  hide() {}
 }
-
-export default RunningScene;

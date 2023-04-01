@@ -33,4 +33,10 @@ const render = () => {
   requestAnimationFrame(render);
 };
 
-render();
+const main = async () => {
+  await runningScene.load();
+  runningScene.initialize();
+  render();
+};
+
+main();
