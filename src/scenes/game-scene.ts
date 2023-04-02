@@ -30,6 +30,8 @@ export default class GameScene extends Scene {
 
   private spheres: Mesh[] = [];
   private scores = 0;
+  private partices: any[] = [];
+  private flagForLeftOrRightDisolvement = true;
 
   private generateSpheres() {
     for (let i = 0; i < 150; i++) {
@@ -135,6 +137,13 @@ export default class GameScene extends Scene {
     this.handlePLayerSphereCollision();
 
     document.querySelector(".scores-count")!.innerHTML = this.scores.toString();
+
+    this.partices.forEach((particle) => {
+      particle.position.y -= 0.001;
+      particle.position.z += 0.05;
+
+      particle.position.x += this.flagForLeftOrRightDisolvement ? 0.05 : -0.05;
+    });
   }
 
   private updateSphereLocation() {
@@ -155,18 +164,9 @@ export default class GameScene extends Scene {
         sphere.position.x < this.player.position.x + 0.2 &&
         sphere.position.x > this.player.position.x - 0.2
       ) {
-        const particleGeometry = new BoxGeometry(0.01, 0.01, 0.01);
-        const particleMaterial = new MeshPhongMaterial({
-          color: (sphere.material as any).color.getHex(),
-        });
-        const particle = new Mesh(particleGeometry, particleMaterial);
-        particle.position.x = sphere.position.x;
-        particle.position.y = sphere.position.y;
-        particle.position.z = sphere.position.z;
-        particle.castShadow = true;
-        this.add(particle);
-        particle.position.x += Math.random() * 1 - 0.5;
-        particle.position.y += Math.random() * 1 - 0.8;
+        this.flagForLeftOrRightDisolvement =
+          !this.flagForLeftOrRightDisolvement;
+        this.addParticles(sphere);
 
         sphere.position.y = 100;
 
@@ -182,5 +182,23 @@ export default class GameScene extends Scene {
     });
   }
 
-  hide() {}
+  private addParticles(sphere: any) {
+    const particleGeometry = new BoxGeometry(0.05, 0.05, 0.05);
+    const particleMaterial = new MeshPhongMaterial({
+      color: (sphere.material as any).color.getHex(),
+    });
+
+    for (let i = 0; i < 5; i++) {
+      const particle = new Mesh(particleGeometry, particleMaterial);
+      particle.position.x = sphere.position.x + Math.random() - 0.5;
+      particle.position.y = sphere.position.y + Math.random() - 0.5;
+      particle.position.z = sphere.position.z;
+
+      particle.castShadow = true;
+
+      this.partices.push(particle);
+    }
+
+    this.add(...this.partices);
+  }
 }
