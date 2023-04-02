@@ -1,9 +1,4 @@
-import {
-  WebGLRenderer,
-  PerspectiveCamera,
-  PCFShadowMap,
-  PCFSoftShadowMap,
-} from "three";
+import { WebGLRenderer, PerspectiveCamera, PCFSoftShadowMap } from "three";
 import RunningScene from "./scenes/running-scene";
 
 const width = window.innerWidth;
@@ -40,7 +35,6 @@ renderer.shadowMap.type = PCFSoftShadowMap;
 const runningScene = new RunningScene();
 
 const render = () => {
-  runningScene.planePosition();
   renderer.render(runningScene, mainCamera);
   requestAnimationFrame(render);
 };
@@ -52,3 +46,17 @@ const main = async () => {
 };
 
 main();
+
+function loop() {
+  renderer.setAnimationLoop(() => {
+    if (runningScene.clock.getElapsedTime() < 10) {
+      runningScene.update();
+    } else {
+      document.getElementById("game-over-modal")!.style.display = "flex";
+    }
+  });
+}
+
+document.getElementById("app")?.addEventListener("click", () => {
+  loop();
+});

@@ -1,41 +1,40 @@
 import * as THREE from "three";
-import TWEEN from "@tweenjs/tween.js";
 
 export default class RunningScene extends THREE.Scene {
-  private geometry = new THREE.PlaneGeometry(2, 100);
+  public clock = new THREE.Clock();
+
+  private geometry = new THREE.PlaneGeometry(2, 40);
   private material = new THREE.MeshPhongMaterial({ color: 0x616497 });
   public fogColor = 0xb4d3ef;
   public density = 0.2;
-  private startTime = 0;
-  private GAME_DURATION = 10;
   private plane = new THREE.Mesh(this.geometry, this.material);
 
-  planePosition() {
-    this.plane.rotation.y = 0;
-    this.plane.rotation.x = 0;
-  }
-
-  private clock = new THREE.Clock();
   private playerSize = new THREE.CylinderGeometry(0.3, 0.3, 0.3, 3);
   private playerMaterial = new THREE.MeshPhongMaterial({ color: 0x4d3d64 });
   private player = new THREE.Mesh(this.playerSize, this.playerMaterial);
   private spheres: THREE.Mesh[] = [];
-  private sphereCount = Math.floor(Math.random() * 200) + 50;
-  private sphereMaterial = new THREE.MeshPhongMaterial({ color: 0xe7f5f6 });
+  private scores = 0;
 
   private generateSpheres() {
-    for (let i = 0; i < this.sphereCount; i++) {
+    for (let i = 0; i < 150; i++) {
+      const sphereMaterial = new THREE.MeshPhongMaterial();
+
       const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-      const sphere = new THREE.Mesh(sphereGeometry, this.sphereMaterial);
+      const isGood = Math.random() > 0.5;
+      if (isGood) {
+        sphereMaterial.color.set(0xffffff);
+      } else {
+        sphereMaterial.color.set(0x000000);
+      }
+
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
       sphere.receiveShadow = true;
       sphere.castShadow = true;
 
-      sphere.position.x = Math.floor(Math.random() * 2) - 0.5;
+      sphere.position.x = Math.random() - 0.5;
       sphere.position.y = Math.floor(Math.random() * 100) - 0.2;
-      sphere.position.z = -0.96;
+      sphere.position.z = -0.9;
       this.add(sphere);
-      const axes = new THREE.AxesHelper(1);
-      sphere.add(axes);
       this.spheres.push(sphere);
     }
   }
@@ -48,7 +47,7 @@ export default class RunningScene extends THREE.Scene {
     this.plane.position.z = -1;
 
     this.player.position.y = 1.2;
-    this.player.position.z = -0.7;
+    this.player.position.z = -0.8;
 
     this.player.rotation.x = -90;
     this.player.rotation.y = 0;
@@ -90,32 +89,71 @@ export default class RunningScene extends THREE.Scene {
 
   initialize() {
     const canvas = document.querySelector("canvas");
-    canvas!.addEventListener("mousemove", this.onMouseMove.bind(this));
-    this.generateSpheres();
 
-    const axesHelper = new THREE.AxesHelper(1);
-    this.player.add(axesHelper);
+    canvas!.addEventListener("mousemove", this.onMouseMove.bind(this));
+    canvas!.addEventListener("touchmove", this.onTouchMove.bind(this));
+
+    this.generateSpheres();
   }
 
   private onMouseMove(event: MouseEvent) {
-    const canvas = document.querySelector("canvas");
-    const x = event.clientX / canvas!.clientWidth;
-    this.player.position.x = (x * 2 - 1) * 2;
+    if (this.player.position.x >= -0.6 && this.player.position.x <= 0.6) {
+      const canvas = document.querySelector("canvas");
+      const x = event.clientX / canvas!.clientWidth;
+      this.player.position.x = x * 2 - 1;
+    } else {
+      this.player.position.x = this.player.position.x > 0 ? 0.6 : -0.6;
+    }
+  }
+
+  private onTouchMove(event: TouchEvent) {
+    if (this.player.position.x >= -0.4 && this.player.position.x <= 0.4) {
+      const canvas = document.querySelector("canvas");
+      const x = event.touches[0].clientX / canvas!.clientWidth;
+      this.player.position.x = (x * 2 - 1) * 2;
+    } else {
+      this.player.position.x = this.player.position.x > 0 ? 0.4 : -0.4;
+    }
   }
 
   update() {
-    const elapsedTime = this.clock.getElapsedTime();
-    if (this.startTime !== null && elapsedTime >= this.GAME_DURATION) {
-      // End the game
-      console.log("Game over!");
-      // this.startTime = null;
-      const div = document.getElementById("game-over-modal");
-      // div.style.display = "flex";
+    this.updateSphereLocation();
 
-      // this.updateSpheres();
+    this.handlePLayerSphereCollision();
 
-      TWEEN.update();
-    }
+    document.querySelector(".scores-count")!.innerHTML = this.scores.toString();
+  }
+
+  private updateSphereLocation() {
+    this.spheres.forEach((sphere) => {
+      sphere.position.y -= 0.025;
+    });
+  }
+
+  private handlePLayerSphereCollision() {
+    this.spheres.forEach((sphere) => {
+      if (sphere.position.y < -0.5) {
+        sphere.position.y = 100;
+      }
+
+      if (
+        sphere.position.y < this.player.position.y + 0.5 &&
+        sphere.position.y > this.player.position.y - 0.5 &&
+        sphere.position.x < this.player.position.x + 0.2 &&
+        sphere.position.x > this.player.position.x - 0.2
+      ) {
+        sphere.position.y = 100;
+
+        if ((sphere.material as any).color.getHex() == 0) {
+          this.scores -= 1;
+          this.player.material.color.set(0x000000);
+        }
+        if ((sphere.material as any).color.getHex() == 16777215) {
+          this.scores += 1;
+          this.player.material.color.set(16777215);
+        }
+      }
+    });
   }
 
   hide() {}
