@@ -1,5 +1,5 @@
 import { WebGLRenderer, PerspectiveCamera, PCFSoftShadowMap } from "three";
-import GameScene from "./scenes/running-scene";
+import GameScene from "./scenes/game-scene";
 
 const width = window.innerWidth;
 const height = window.innerHeight;
