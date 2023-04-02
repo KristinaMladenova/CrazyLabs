@@ -1,28 +1,41 @@
-import * as THREE from "three";
+import {
+  AmbientLight,
+  BoxGeometry,
+  Clock,
+  CylinderGeometry,
+  DirectionalLight,
+  FogExp2,
+  Mesh,
+  MeshPhongMaterial,
+  OrthographicCamera,
+  PlaneGeometry,
+  Scene,
+  SphereGeometry,
+} from "three";
 
-export default class GameScene extends THREE.Scene {
-  public clock = new THREE.Clock();
+export default class GameScene extends Scene {
+  public clock = new Clock();
 
-  private geometry = new THREE.PlaneGeometry(2, 40);
-  private material = new THREE.MeshPhongMaterial({ color: 0x616497 });
+  private geometry = new PlaneGeometry(2, 40);
+  private material = new MeshPhongMaterial({ color: 0x616497 });
 
   public fogColor = 0xb4d3ef;
-  public density = 0.2;
+  public density = 0.22;
 
-  private plane = new THREE.Mesh(this.geometry, this.material);
+  private plane = new Mesh(this.geometry, this.material);
 
-  private playerSize = new THREE.CylinderGeometry(0.3, 0.3, 0.3, 3);
-  private playerMaterial = new THREE.MeshPhongMaterial({ color: 0x4d3d64 });
-  private player = new THREE.Mesh(this.playerSize, this.playerMaterial);
+  private playerSize = new CylinderGeometry(0.3, 0.3, 0.3, 3);
+  private playerMaterial = new MeshPhongMaterial({ color: 0x4d3d64 });
+  private player = new Mesh(this.playerSize, this.playerMaterial);
 
-  private spheres: THREE.Mesh[] = [];
+  private spheres: Mesh[] = [];
   private scores = 0;
 
   private generateSpheres() {
     for (let i = 0; i < 150; i++) {
-      const sphereMaterial = new THREE.MeshPhongMaterial();
+      const sphereMaterial = new MeshPhongMaterial();
 
-      const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+      const sphereGeometry = new SphereGeometry(0.1, 16, 16);
       const isGood = Math.random() > 0.5;
       if (isGood) {
         sphereMaterial.color.set(0xb4d3ef);
@@ -30,7 +43,7 @@ export default class GameScene extends THREE.Scene {
         sphereMaterial.color.set(0xb0324c);
       }
 
-      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      const sphere = new Mesh(sphereGeometry, sphereMaterial);
       sphere.receiveShadow = true;
       sphere.castShadow = true;
 
@@ -43,8 +56,8 @@ export default class GameScene extends THREE.Scene {
   }
 
   async load() {
-    const ambient = new THREE.AmbientLight(0xffffff, 1);
-    const light = new THREE.DirectionalLight(0xffffff, 0.6);
+    const ambient = new AmbientLight(0xffffff, 1);
+    const light = new DirectionalLight(0xffffff, 0.6);
     light.position.set(1.4, 3.6, 8);
 
     this.add(ambient);
@@ -56,7 +69,7 @@ export default class GameScene extends THREE.Scene {
     light.shadow.mapSize.width = innerWidth;
     light.shadow.mapSize.height = innerHeight;
 
-    light.shadow.camera = new THREE.OrthographicCamera(
+    light.shadow.camera = new OrthographicCamera(
       -frustumSize / 2,
       frustumSize / 2,
       frustumSize / 2,
@@ -69,7 +82,7 @@ export default class GameScene extends THREE.Scene {
     light.shadow.camera.lookAt(this.player.position);
     this.add(light.shadow.camera);
 
-    this.fog = new THREE.FogExp2(this.fogColor, this.density);
+    this.fog = new FogExp2(this.fogColor, this.density);
     this.plane.receiveShadow = true;
 
     this.plane.position.y = 0;
@@ -126,7 +139,7 @@ export default class GameScene extends THREE.Scene {
 
   private updateSphereLocation() {
     this.spheres.forEach((sphere) => {
-      sphere.position.y -= 0.04;
+      sphere.position.y -= 0.05;
     });
   }
 
@@ -142,11 +155,11 @@ export default class GameScene extends THREE.Scene {
         sphere.position.x < this.player.position.x + 0.2 &&
         sphere.position.x > this.player.position.x - 0.2
       ) {
-        const particleGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-        const particleMaterial = new THREE.MeshPhongMaterial({
+        const particleGeometry = new BoxGeometry(0.01, 0.01, 0.01);
+        const particleMaterial = new MeshPhongMaterial({
           color: (sphere.material as any).color.getHex(),
         });
-        const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+        const particle = new Mesh(particleGeometry, particleMaterial);
         particle.position.x = sphere.position.x;
         particle.position.y = sphere.position.y;
         particle.position.z = sphere.position.z;
