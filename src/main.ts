@@ -1,5 +1,5 @@
 import { WebGLRenderer, PerspectiveCamera, PCFSoftShadowMap } from "three";
-import RunningScene from "./scenes/running-scene";
+import GameScene from "./scenes/game-scene";
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -32,16 +32,16 @@ renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = PCFSoftShadowMap;
 
-const runningScene = new RunningScene();
+const gameScene = new GameScene();
 
 const render = () => {
-  renderer.render(runningScene, mainCamera);
+  renderer.render(gameScene, mainCamera);
   requestAnimationFrame(render);
 };
 
 const main = async () => {
-  await runningScene.load();
-  runningScene.initialize();
+  await gameScene.load();
+  gameScene.initialize();
   render();
 };
 
@@ -49,8 +49,8 @@ main();
 
 function loop() {
   renderer.setAnimationLoop(() => {
-    if (runningScene.clock.getElapsedTime() < 10) {
-      runningScene.update();
+    if (gameScene.clock.getElapsedTime() < 10) {
+      gameScene.update();
     } else {
       document.getElementById("game-over-modal")!.style.display = "flex";
     }

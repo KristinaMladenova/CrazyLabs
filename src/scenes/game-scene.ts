@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export default class RunningScene extends THREE.Scene {
+export default class GameScene extends THREE.Scene {
   public clock = new THREE.Clock();
 
   private geometry = new THREE.PlaneGeometry(2, 40);
@@ -75,7 +75,6 @@ export default class RunningScene extends THREE.Scene {
       frustumSize
     );
 
-    // Same position as LIGHT position.
     light.shadow.camera.position.copy(light.position);
     light.shadow.camera.lookAt(this.player.position);
     this.add(light.shadow.camera);
