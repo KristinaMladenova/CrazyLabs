@@ -126,7 +126,7 @@ export default class GameScene extends THREE.Scene {
 
   private updateSphereLocation() {
     this.spheres.forEach((sphere) => {
-      sphere.position.y -= 0.025;
+      sphere.position.y -= 0.04;
     });
   }
 
@@ -142,6 +142,19 @@ export default class GameScene extends THREE.Scene {
         sphere.position.x < this.player.position.x + 0.2 &&
         sphere.position.x > this.player.position.x - 0.2
       ) {
+        const particleGeometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+        const particleMaterial = new THREE.MeshPhongMaterial({
+          color: (sphere.material as any).color.getHex(),
+        });
+        const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+        particle.position.x = sphere.position.x;
+        particle.position.y = sphere.position.y;
+        particle.position.z = sphere.position.z;
+        particle.castShadow = true;
+        this.add(particle);
+        particle.position.x += Math.random() * 1 - 0.5;
+        particle.position.y += Math.random() * 1 - 0.8;
+
         sphere.position.y = 100;
 
         if ((sphere.material as any).color.getHex() == 0xb0324c) {
