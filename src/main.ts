@@ -11,7 +11,7 @@ const renderer = new WebGLRenderer({
   precision: "mediump",
 });
 
-const mainCamera = new PerspectiveCamera(100, width / height, 0.1, 100);
+const mainCamera = new PerspectiveCamera(100, width / height, 0.1, 8);
 mainCamera.rotateX(-150);
 mainCamera.position.z = 0;
 mainCamera.position.y = 1;
